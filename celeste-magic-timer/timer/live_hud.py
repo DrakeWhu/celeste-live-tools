@@ -119,7 +119,7 @@ class MetricCard(QFrame):
         self._value.setObjectName("metricValue")
         self._value.setFont(QFont("JetBrains Mono", 16, 800))
         self._value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._value.setMinimumWidth(124)
+        self._value.setMinimumWidth(148)
 
         layout.addWidget(self._label)
         layout.addStretch(1)
@@ -184,7 +184,7 @@ class SplitRowWidget(QFrame):
         super().__init__()
         self.setObjectName("splitRow")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setFixedHeight(74)
+        self.setFixedHeight(76)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
         self._background_color = QColor(ROW_FILL)
@@ -233,14 +233,14 @@ class SplitRowWidget(QFrame):
         self._time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._time.setMinimumWidth(124)
         self._time.setFont(self._time_font)
-        self._time.setMinimumHeight(22)
+        self._time.setMinimumHeight(24)
 
         self._delta = QLabel()
         self._delta.setObjectName("splitDelta")
         self._delta.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._delta.setMinimumWidth(96)
+        self._delta.setMinimumWidth(104)
         self._delta.setFont(self._delta_font)
-        self._delta.setMinimumHeight(22)
+        self._delta.setMinimumHeight(26)
 
         values_column.addWidget(self._time)
         values_column.addWidget(self._delta)
