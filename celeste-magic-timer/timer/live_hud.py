@@ -256,7 +256,8 @@ class SplitRowWidget(QFrame):
             else ROW_BORDER
         )
         self.setStyleSheet(
-            "background-color: %s; border-radius: 12px; border: %dpx solid %s;" % (background, border_width, border_color)
+            "background-color: %s; border-radius: 12px; border: %dpx solid %s; color: %s;"
+            % (background, border_width, border_color, PRIMARY_TEXT)
         )
 
         self._name.setText(row.name)
