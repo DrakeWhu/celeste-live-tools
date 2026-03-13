@@ -7,10 +7,11 @@ import sys
 from typing import List, Optional, Sequence
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
+    QGraphicsDropShadowEffect,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -45,6 +46,10 @@ SECONDARY_TEXT = "#aeb7c4"
 PANEL_FILL = "rgba(18, 24, 32, 0.78)"
 ROW_FILL = "rgba(20, 28, 38, 0.82)"
 CURRENT_FILL = "rgba(41, 56, 74, 0.94)"
+GOOD_FILL = "rgba(20, 36, 28, 0.84)"
+BAD_FILL = "rgba(40, 22, 24, 0.84)"
+GOLD_FILL = "rgba(44, 34, 18, 0.88)"
+CURRENT_GOLD_FILL = "rgba(66, 52, 22, 0.92)"
 ROW_BORDER = "rgba(201, 215, 229, 0.14)"
 
 
@@ -133,6 +138,41 @@ def _rgba(hex_color: str, alpha: float) -> str:
     return "rgba(%d, %d, %d, %.3f)" % (r, g, b, alpha)
 
 
+def _clamp01(value: float) -> float:
+    return 0.0 if value <= 0.0 else 1.0 if value >= 1.0 else value
+
+
+class RunProgressBar(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setObjectName("runProgressBar")
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setFixedHeight(10)
+
+        self._fill = QFrame(self)
+        self._fill.setObjectName("runProgressFill")
+        self._fraction: Optional[float] = None
+        self.set_fraction(None)
+
+    def set_fraction(self, fraction: Optional[float]) -> None:
+        self._fraction = None if fraction is None else _clamp01(float(fraction))
+        self.setProperty("unknown", self._fraction is None)
+        self._update_geometry()
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._update_geometry()
+
+    def _update_geometry(self) -> None:
+        rect = self.contentsRect()
+        fraction = 0.0 if self._fraction is None else self._fraction
+        fill_width = int(rect.width() * fraction)
+        self._fill.setGeometry(rect.x(), rect.y(), fill_width, rect.height())
+
+
 class SplitRowWidget(QFrame):
     def __init__(self):
         super().__init__()
@@ -167,10 +207,12 @@ class SplitRowWidget(QFrame):
         self._time = QLabel()
         self._time.setObjectName("splitTime")
         self._time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self._time.setMinimumWidth(124)
 
         self._delta = QLabel()
         self._delta.setObjectName("splitDelta")
         self._delta.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self._delta.setMinimumWidth(96)
 
         values_column.addWidget(self._time)
         values_column.addWidget(self._delta)
@@ -181,21 +223,46 @@ class SplitRowWidget(QFrame):
 
     def update_row(self, row: LiveSplitRow) -> None:
         accent_color = SEMANTIC_COLORS[row.semantic]
-        self._accent.setStyleSheet(
-            "background-color: %s; border-radius: 4px;" % accent_color
-        )
+        if row.semantic == HudSemantic.GOLD:
+            accent_paint = (
+                "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 %s, stop:1 #ff9f0a)" % accent_color
+            )
+        elif row.semantic == HudSemantic.GOOD:
+            accent_paint = "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 %s, stop:1 #248a3d)" % accent_color
+        elif row.semantic == HudSemantic.BAD:
+            accent_paint = "qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 %s, stop:1 #b42318)" % accent_color
+        else:
+            accent_paint = accent_color
+        self._accent.setStyleSheet("background: %s; border-radius: 4px;" % accent_paint)
 
         is_current = row.phase == LiveSplitPhase.CURRENT
-        background = CURRENT_FILL if is_current else ROW_FILL
-        border_color = _rgba(accent_color, 0.55) if (is_current or row.semantic == HudSemantic.GOLD) else ROW_BORDER
+        if is_current and row.semantic == HudSemantic.GOLD:
+            background = CURRENT_GOLD_FILL
+        elif is_current:
+            background = CURRENT_FILL
+        elif row.semantic == HudSemantic.GOLD:
+            background = GOLD_FILL
+        elif row.semantic == HudSemantic.GOOD:
+            background = GOOD_FILL
+        elif row.semantic == HudSemantic.BAD:
+            background = BAD_FILL
+        else:
+            background = ROW_FILL
+
+        border_width = 2 if is_current else 1
+        border_color = (
+            _rgba(accent_color, 0.72)
+            if (is_current or row.semantic == HudSemantic.GOLD)
+            else ROW_BORDER
+        )
         self.setStyleSheet(
-            "background-color: %s; border-radius: 12px; border: 1px solid %s;" % (background, border_color)
+            "background-color: %s; border-radius: 12px; border: %dpx solid %s;" % (background, border_width, border_color)
         )
 
         self._name.setText(row.name)
         self._name.setStyleSheet(
             "color: %s; font-weight: %s;"
-            % (PRIMARY_TEXT, "700" if is_current else "500")
+            % (PRIMARY_TEXT, "800" if is_current else "550")
         )
 
         phase_text = {
@@ -203,23 +270,29 @@ class SplitRowWidget(QFrame):
             LiveSplitPhase.CURRENT: "current split",
             LiveSplitPhase.FUTURE: "upcoming split",
         }[row.phase]
+        if row.semantic == HudSemantic.GOLD and row.phase != LiveSplitPhase.FUTURE:
+            phase_text = "GOLD - %s" % phase_text
         self._phase.setText(phase_text)
-        self._phase.setStyleSheet("color: %s;" % SECONDARY_TEXT)
+        phase_color = _rgba(accent_color, 0.95) if row.semantic == HudSemantic.GOLD else SECONDARY_TEXT
+        self._phase.setStyleSheet("color: %s; font-weight: 700;" % phase_color)
 
         time_text = format_clock(row.time_ms)
         if row.phase == LiveSplitPhase.CURRENT:
             time_text = format_clock(row.time_ms, decimals=2)
         self._time.setText(time_text)
-        self._time.setStyleSheet("color: %s;" % PRIMARY_TEXT)
+        time_weight = "800" if is_current else "700"
+        self._time.setStyleSheet("color: %s; font-weight: %s;" % (PRIMARY_TEXT, time_weight))
 
         if row.phase == LiveSplitPhase.FUTURE:
             self._delta.setText("up next")
             self._delta.setStyleSheet("color: %s;" % SECONDARY_TEXT)
         else:
             self._delta.setText(format_delta(row.delta_ms))
+            delta_text_color = "#0b0f14" if row.semantic in (HudSemantic.GOLD, HudSemantic.GOOD) else "#fff4f2"
             self._delta.setStyleSheet(
-                "color: %s; background-color: %s; padding: 2px 8px; border-radius: 9px; font-weight: 800;"
-                % ("#0b0f14" if row.semantic in (HudSemantic.GOLD, HudSemantic.GOOD) else "#fff4f2", _rgba(accent_color, 0.92))
+                "color: %s; background-color: %s; padding: 2px 10px; border-radius: 10px; "
+                "font-weight: 900; border: 1px solid %s;"
+                % (delta_text_color, _rgba(accent_color, 0.95), _rgba(accent_color, 0.55))
             )
 
 
@@ -251,18 +324,39 @@ class LiveHudWindow(QMainWindow):
         self._timer_panel = self._build_panel()
         timer_layout = QVBoxLayout(self._timer_panel)
         timer_layout.setContentsMargins(18, 16, 18, 16)
-        timer_layout.setSpacing(8)
+        timer_layout.setSpacing(10)
 
         self._current_time = QLabel()
         self._current_time.setObjectName("currentTime")
+        self._current_time.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+
+        progress_header = QHBoxLayout()
+        progress_header.setContentsMargins(0, 0, 0, 0)
+        progress_header.setSpacing(8)
+
+        self._progress_caption = QLabel("RUN PROGRESS")
+        self._progress_caption.setObjectName("sectionLabel")
+
+        self._progress_value = QLabel("--%")
+        self._progress_value.setObjectName("progressValue")
+        self._progress_value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+        progress_header.addWidget(self._progress_caption)
+        progress_header.addStretch(1)
+        progress_header.addWidget(self._progress_value)
+
+        self._progress_bar = RunProgressBar()
 
         self._current_split_caption = QLabel("CURRENT SPLIT")
         self._current_split_caption.setObjectName("sectionLabel")
 
         self._current_split_name = QLabel()
         self._current_split_name.setObjectName("currentSplitName")
+        self._current_split_name.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
 
         timer_layout.addWidget(self._current_time)
+        timer_layout.addLayout(progress_header)
+        timer_layout.addWidget(self._progress_bar)
         timer_layout.addWidget(self._current_split_caption)
         timer_layout.addWidget(self._current_split_name)
 
@@ -303,6 +397,7 @@ class LiveHudWindow(QMainWindow):
 
         self._install_fonts()
         self._install_styles()
+        self._install_effects()
         self._apply_state(state)
 
         self._timer = QTimer(self)
@@ -318,8 +413,16 @@ class LiveHudWindow(QMainWindow):
 
     def _install_fonts(self) -> None:
         self._run_label.setFont(QFont("DejaVu Sans Condensed", 9, 600))
-        self._current_time.setFont(QFont("JetBrains Mono", 31, 700))
-        self._current_split_name.setFont(QFont("DejaVu Sans Condensed", 18, 600))
+        self._current_time.setFont(QFont("JetBrains Mono", 46, 800))
+        self._progress_value.setFont(QFont("JetBrains Mono", 11, 700))
+        self._current_split_name.setFont(QFont("DejaVu Sans Condensed", 18, 650))
+
+    def _install_effects(self) -> None:
+        time_glow = QGraphicsDropShadowEffect(self._current_time)
+        time_glow.setBlurRadius(20)
+        time_glow.setOffset(0, 2)
+        time_glow.setColor(QColor(0, 0, 0, 180))
+        self._current_time.setGraphicsEffect(time_glow)
 
     def _install_styles(self) -> None:
         self.setStyleSheet(
@@ -334,7 +437,7 @@ class LiveHudWindow(QMainWindow):
             }
             #panel {
                 background-color: rgba(18, 24, 32, 0.78);
-                border: 1px solid rgba(201, 215, 229, 0.11);
+                border: 1px solid rgba(201, 215, 229, 0.14);
                 border-radius: 16px;
             }
             #runLabel {
@@ -347,6 +450,33 @@ class LiveHudWindow(QMainWindow):
             }
             #currentTime {
                 color: #f7f2e9;
+                padding: 2px 0px;
+            }
+            #progressValue {
+                color: rgba(201, 215, 229, 0.86);
+                font-size: 11px;
+                font-family: "JetBrains Mono", "DejaVu Sans Mono";
+            }
+            #runProgressBar {
+                background-color: rgba(201, 215, 229, 0.12);
+                border: 1px solid rgba(201, 215, 229, 0.18);
+                border-radius: 6px;
+            }
+            #runProgressBar[unknown="true"] {
+                background-color: qlineargradient(
+                    x1: 0, y1: 0, x2: 1, y2: 0,
+                    stop: 0 rgba(201, 215, 229, 0.08),
+                    stop: 0.55 rgba(201, 215, 229, 0.14),
+                    stop: 1 rgba(201, 215, 229, 0.08)
+                );
+            }
+            #runProgressFill {
+                background-color: qlineargradient(
+                    x1: 0, y1: 0, x2: 1, y2: 0,
+                    stop: 0 rgba(201, 215, 229, 0.90),
+                    stop: 1 rgba(245, 241, 232, 0.92)
+                );
+                border-radius: 6px;
             }
             #sectionLabel, #metricLabel {
                 color: #93a1b0;
@@ -355,6 +485,7 @@ class LiveHudWindow(QMainWindow):
             }
             #currentSplitName {
                 color: #f5f1e8;
+                font-size: 18px;
             }
             #metricValue {
                 color: #f5f1e8;
@@ -370,7 +501,7 @@ class LiveHudWindow(QMainWindow):
             }
             #splitTime {
                 color: #f5f1e8;
-                font-size: 15px;
+                font-size: 16px;
                 font-family: "JetBrains Mono", "DejaVu Sans Mono";
                 font-weight: 700;
             }
@@ -390,6 +521,17 @@ class LiveHudWindow(QMainWindow):
         self._status_line.setText(self._format_status(state))
         self._current_time.setText(format_clock(state.current_time_ms, decimals=2))
         self._current_split_name.setText(state.current_split_name)
+
+        progress_fraction: Optional[float] = None
+        predicted_total = state.predicted_final.value_ms
+        if predicted_total is not None and predicted_total > 0:
+            progress_fraction = state.current_time_ms / predicted_total
+
+        if progress_fraction is None:
+            self._progress_value.setText("--%")
+        else:
+            self._progress_value.setText("%d%%" % int(_clamp01(progress_fraction) * 100 + 0.5))
+        self._progress_bar.set_fraction(progress_fraction)
 
         metrics = [state.predicted_final, state.best_possible, state.pb_pace, state.median_pace]
         for card, metric in zip(self._metric_cards, metrics):
