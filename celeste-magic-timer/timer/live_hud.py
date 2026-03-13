@@ -104,25 +104,25 @@ class MetricCard(QFrame):
     def __init__(self, metric: LiveMetric):
         super().__init__()
         self.setObjectName("metricCard")
-        self.setFixedHeight(56)
+        self.setFixedHeight(64)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(10)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(3)
 
         self._label = QLabel(metric.label.upper())
         self._label.setObjectName("metricLabel")
         self._label.setFont(QFont("DejaVu Sans Condensed", 9, 700))
+        self._label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self._label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self._value = QLabel(metric_text(metric))
         self._value.setObjectName("metricValue")
         self._value.setFont(QFont("JetBrains Mono", 16, 800))
-        self._value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._value.setMinimumWidth(148)
+        self._value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self._value.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         layout.addWidget(self._label)
-        layout.addStretch(1)
         layout.addWidget(self._value)
 
         self.update_metric(metric)
