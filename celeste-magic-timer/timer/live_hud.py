@@ -200,7 +200,7 @@ class SplitRowWidget(QFrame):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 10, 12, 10)
-        layout.setSpacing(12)
+        layout.setSpacing(10)
 
         self._accent = QFrame()
         self._accent.setFixedWidth(8)
@@ -224,30 +224,31 @@ class SplitRowWidget(QFrame):
         text_column.addWidget(self._name)
         text_column.addWidget(self._phase)
 
-        values_column = QVBoxLayout()
-        values_column.setContentsMargins(0, 0, 0, 0)
-        values_column.setSpacing(2)
+        values_widget = QWidget()
+        values_layout = QHBoxLayout(values_widget)
+        values_layout.setContentsMargins(0, 0, 0, 0)
+        values_layout.setSpacing(8)
 
         self._time = QLabel()
         self._time.setObjectName("splitTime")
         self._time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._time.setMinimumWidth(124)
         self._time.setFont(self._time_font)
         self._time.setMinimumHeight(24)
+        self._time.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self._delta = QLabel()
         self._delta.setObjectName("splitDelta")
         self._delta.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self._delta.setMinimumWidth(104)
         self._delta.setFont(self._delta_font)
         self._delta.setMinimumHeight(26)
+        self._delta.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-        values_column.addWidget(self._time)
-        values_column.addWidget(self._delta)
+        values_layout.addWidget(self._time, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        values_layout.addWidget(self._delta, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
         layout.addWidget(self._accent)
         layout.addLayout(text_column, 1)
-        layout.addLayout(values_column)
+        layout.addWidget(values_widget, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
