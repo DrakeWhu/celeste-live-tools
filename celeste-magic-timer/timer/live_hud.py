@@ -7,7 +7,7 @@ import sys
 from typing import List, Optional, Sequence
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtGui import QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -178,10 +178,23 @@ class SplitRowWidget(QFrame):
         super().__init__()
         self.setObjectName("splitRow")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setFixedHeight(74)
+        self.setFrameShape(QFrame.Shape.NoFrame)
+
+        self._background_color = QColor(ROW_FILL)
+        self._border_color = QColor(ROW_BORDER)
+        self._border_width = 1
+
+        self._name_font = QFont("DejaVu Sans Condensed", 15, 600)
+        self._name_font_current = QFont("DejaVu Sans Condensed", 15, 800)
+        self._phase_font = QFont("JetBrains Mono", 10, 600)
+        self._time_font = QFont("JetBrains Mono", 16, 800)
+        self._time_font_current = QFont("JetBrains Mono", 16, 900)
+        self._delta_font = QFont("JetBrains Mono", 12, 800)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(12)
 
         self._accent = QFrame()
         self._accent.setFixedWidth(8)
@@ -193,9 +206,14 @@ class SplitRowWidget(QFrame):
 
         self._name = QLabel()
         self._name.setObjectName("splitName")
+        self._name.setFont(self._name_font)
+        self._name.setMinimumHeight(22)
+        self._name.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self._phase = QLabel()
         self._phase.setObjectName("splitPhase")
+        self._phase.setFont(self._phase_font)
+        self._phase.setMinimumHeight(16)
 
         text_column.addWidget(self._name)
         text_column.addWidget(self._phase)
@@ -208,11 +226,15 @@ class SplitRowWidget(QFrame):
         self._time.setObjectName("splitTime")
         self._time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._time.setMinimumWidth(124)
+        self._time.setFont(self._time_font)
+        self._time.setMinimumHeight(22)
 
         self._delta = QLabel()
         self._delta.setObjectName("splitDelta")
         self._delta.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._delta.setMinimumWidth(96)
+        self._delta.setFont(self._delta_font)
+        self._delta.setMinimumHeight(22)
 
         values_column.addWidget(self._time)
         values_column.addWidget(self._delta)
@@ -220,6 +242,23 @@ class SplitRowWidget(QFrame):
         layout.addWidget(self._accent)
         layout.addLayout(text_column, 1)
         layout.addLayout(values_column)
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+
+        half_pen = max(1, self._border_width) / 2.0
+        rect = self.rect().adjusted(int(half_pen), int(half_pen), -int(half_pen), -int(half_pen))
+        radius = 12.0
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self._background_color)
+        painter.drawRoundedRect(rect, radius, radius)
+
+        pen = QPen(self._border_color, self._border_width)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(rect, radius, radius)
 
     def update_row(self, row: LiveSplitRow) -> None:
         accent_color = SEMANTIC_COLORS[row.semantic]
@@ -249,22 +288,16 @@ class SplitRowWidget(QFrame):
         else:
             background = ROW_FILL
 
-        border_width = 2 if is_current else 1
-        border_color = (
-            _rgba(accent_color, 0.72)
-            if (is_current or row.semantic == HudSemantic.GOLD)
-            else ROW_BORDER
-        )
-        self.setStyleSheet(
-            "background-color: %s; border-radius: 12px; border: %dpx solid %s; color: %s;"
-            % (background, border_width, border_color, PRIMARY_TEXT)
-        )
+        self._background_color = QColor(background)
+        self._border_width = 2 if is_current else 1
+        if is_current or row.semantic == HudSemantic.GOLD:
+            self._border_color = QColor(_rgba(accent_color, 0.72))
+        else:
+            self._border_color = QColor(ROW_BORDER)
 
         self._name.setText(row.name)
-        self._name.setStyleSheet(
-            "color: %s; font-weight: %s;"
-            % (PRIMARY_TEXT, "800" if is_current else "550")
-        )
+        self._name.setFont(self._name_font_current if is_current else self._name_font)
+        self._name.setStyleSheet("color: %s;" % PRIMARY_TEXT)
 
         phase_text = {
             LiveSplitPhase.PAST: "recent split",
@@ -275,18 +308,20 @@ class SplitRowWidget(QFrame):
             phase_text = "GOLD - %s" % phase_text
         self._phase.setText(phase_text)
         phase_color = _rgba(accent_color, 0.95) if row.semantic == HudSemantic.GOLD else SECONDARY_TEXT
-        self._phase.setStyleSheet("color: %s; font-weight: 700;" % phase_color)
+        self._phase.setStyleSheet("color: %s;" % phase_color)
 
         time_text = format_clock(row.time_ms)
         if row.phase == LiveSplitPhase.CURRENT:
             time_text = format_clock(row.time_ms, decimals=2)
         self._time.setText(time_text)
-        time_weight = "800" if is_current else "700"
-        self._time.setStyleSheet("color: %s; font-weight: %s;" % (PRIMARY_TEXT, time_weight))
+        self._time.setFont(self._time_font_current if is_current else self._time_font)
+        self._time.setStyleSheet("color: %s;" % PRIMARY_TEXT)
 
         if row.phase == LiveSplitPhase.FUTURE:
             self._delta.setText("up next")
-            self._delta.setStyleSheet("color: %s;" % SECONDARY_TEXT)
+            self._delta.setStyleSheet(
+                "color: %s; background: transparent; border: none; padding: 0px;" % SECONDARY_TEXT
+            )
         else:
             self._delta.setText(format_delta(row.delta_ms))
             delta_text_color = "#0b0f14" if row.semantic in (HudSemantic.GOLD, HudSemantic.GOOD) else "#fff4f2"
@@ -295,6 +330,8 @@ class SplitRowWidget(QFrame):
                 "font-weight: 900; border: 1px solid %s;"
                 % (delta_text_color, _rgba(accent_color, 0.95), _rgba(accent_color, 0.55))
             )
+
+        self.update()
 
 
 class LiveHudWindow(QMainWindow):
