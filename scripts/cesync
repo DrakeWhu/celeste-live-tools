@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ANALYTICS_ROOT="$ROOT_DIR/checkpoint-analytics"
+ANALYTICS_PYTHON="${ANALYTICS_PYTHON:-python3}"
+
+cd "$ANALYTICS_ROOT"
+
+echo "==> Importando CSVs nuevos"
+"$ANALYTICS_PYTHON" -m src.import_many "$@"
+
+echo
+echo "==> Run priority"
+"$ANALYTICS_PYTHON" -m src.stats run-priority
+
+echo
+echo "==> Checkpoint consistency"
+"$ANALYTICS_PYTHON" -m src.stats checkpoint-consistency
+

@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+LOGGER_ROOT="$ROOT_DIR/celeste-magic-timer"
+ANALYTICS_ROOT="$ROOT_DIR/checkpoint-analytics"
+COACH_DB="$ROOT_DIR/checkpoint-analytics/data/celeste.db"
+HUD_PYTHON="${HUD_PYTHON:-python3}"
+
+export CHECKPOINT_COACH_ENABLED=1
+export CHECKPOINT_COACH_ANALYTICS_ROOT="$ANALYTICS_ROOT"
+export CHECKPOINT_COACH_DB="$COACH_DB"
+export CHECKPOINT_COACH_CONTEXT="${CHECKPOINT_COACH_CONTEXT:-any}"
+
+LAUNCH_HUD=0
+LOGGER_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --hud)
+      LAUNCH_HUD=1
+      shift
+      ;;
+    --full-run)
+      export CHECKPOINT_COACH_CONTEXT="full_run"
+      shift
+      ;;
+    --practice)
+      export CHECKPOINT_COACH_CONTEXT="chapter_practice"
+      shift
+      ;;
+    *)
+      LOGGER_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+cd "$LOGGER_ROOT"
+
+cleanup() {
+  if [[ -n "${HUD_PID:-}" ]] && kill -0 "$HUD_PID" 2>/dev/null; then
+    kill "$HUD_PID" 2>/dev/null || true
+    wait "$HUD_PID" 2>/dev/null || true
+  fi
+
+  if [[ -n "${TRACER_PID:-}" ]] && kill -0 "$TRACER_PID" 2>/dev/null; then
+    kill "$TRACER_PID" 2>/dev/null || true
+    wait "$TRACER_PID" 2>/dev/null || true
+  fi
+}
+
+trap cleanup EXIT INT TERM
+
+./tracer/celeste_tracer_loop &
+TRACER_PID=$!
+
+if [[ "$LAUNCH_HUD" -eq 1 ]]; then
+  "$HUD_PYTHON" -m timer.live_hud --real &
+  HUD_PID=$!
+fi
+
+python3 -m timer.checkpoint_logger "${LOGGER_ARGS[@]}"

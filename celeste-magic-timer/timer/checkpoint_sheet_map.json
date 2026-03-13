@@ -1,0 +1,146 @@
+{
+  "1:A:Forsaken City A / Start": {
+    "sheet_chapter": "1a",
+    "sheet_cp": "1a Start"
+  },
+  "1:A:Forsaken City A / Crossing": {
+    "sheet_chapter": "1a",
+    "sheet_cp": "Crossing"
+  },
+  "1:A:Forsaken City A / Chasm": {
+    "sheet_chapter": "1a",
+    "sheet_cp": "Chasm"
+  },
+  "2:A:Old Site A / Start": {
+    "sheet_chapter": "2a",
+    "sheet_cp": "2a Start"
+  },
+  "2:A:Old Site A / Intervention": {
+    "sheet_chapter": "2a",
+    "sheet_cp": "Intervention"
+  },
+  "2:A:Old Site A / Awake": {
+    "sheet_chapter": "2a",
+    "sheet_cp": "Awake"
+  },
+  "3:A:Celestial Resort A / Start": {
+    "sheet_chapter": "3a",
+    "sheet_cp": "3a Start"
+  },
+  "3:A:Celestial Resort A / Huge Mess": {
+    "sheet_chapter": "3a",
+    "sheet_cp": "Huge Mess"
+  },
+  "3:A:Celestial Resort A / Elevator Shaft": {
+    "sheet_chapter": "3a",
+    "sheet_cp": "Elevator Shaft"
+  },
+  "3:A:Celestial Resort A / Presidential Suite": {
+    "sheet_chapter": "3a",
+    "sheet_cp": "Presidential Suite"
+  },
+  "4:A:Golden Ridge A / Start": {
+    "sheet_chapter": "4a",
+    "sheet_cp": "4a Start"
+  },
+  "4:A:Golden Ridge A / Shrine": {
+    "sheet_chapter": "4a",
+    "sheet_cp": "Shrine"
+  },
+  "4:A:Golden Ridge A / Old Trail": {
+    "sheet_chapter": "4a",
+    "sheet_cp": "Old Trail"
+  },
+  "4:A:Golden Ridge A / Cliff Face": {
+    "sheet_chapter": "4a",
+    "sheet_cp": "Cliff Face"
+  },
+  "5:A:Mirror Temple A / Start": {
+    "sheet_chapter": "5a",
+    "sheet_cp": "5a Start"
+  },
+  "5:A:Mirror Temple A / Depths": {
+    "sheet_chapter": "5a",
+    "sheet_cp": "Depths"
+  },
+  "5:A:Mirror Temple A / Unravelling": {
+    "sheet_chapter": "5a",
+    "sheet_cp": "Unravelling"
+  },
+  "5:A:Mirror Temple A / Search": {
+    "sheet_chapter": "5a",
+    "sheet_cp": "Search"
+  },
+  "5:A:Mirror Temple A / Rescue": {
+    "sheet_chapter": "5a",
+    "sheet_cp": "Rescue"
+  },
+  "5:B:Mirror Temple B / Start": {
+    "sheet_chapter": "5b",
+    "sheet_cp": "5b Start"
+  },
+  "5:B:Mirror Temple B / Central Chamber": {
+    "sheet_chapter": "5b",
+    "sheet_cp": "Central Chamber"
+  },
+  "5:B:Mirror Temple B / Through The Mirror": {
+    "sheet_chapter": "5b",
+    "sheet_cp": "Through The Mirror"
+  },
+  "5:B:Mirror Temple B / Mix Master": {
+    "sheet_chapter": "5b",
+    "sheet_cp": "Mix Master"
+  },
+  "6:A:Reflection A / Start": {
+    "sheet_chapter": "6a",
+    "sheet_cp": "6a Start"
+  },
+  "6:A:Reflection A / Lake": {
+    "sheet_chapter": "6a",
+    "sheet_cp": "Lake"
+  },
+  "6:A:Reflection A / Hollows": {
+    "sheet_chapter": "6a",
+    "sheet_cp": "Hollows"
+  },
+  "6:A:Reflection A / Reflection": {
+    "sheet_chapter": "6a",
+    "sheet_cp": "Reflection"
+  },
+  "6:A:Reflection A / Rock Bottom": {
+    "sheet_chapter": "6a",
+    "sheet_cp": "Rock Bottom"
+  },
+  "6:A:Reflection A / Resolution": {
+    "sheet_chapter": "6a",
+    "sheet_cp": "Resolution"
+  },
+  "7:A:The Summit A / Start": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "7a Start"
+  },
+  "7:A:The Summit A / 500M": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "500m"
+  },
+  "7:A:The Summit A / 1000M": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "1000m"
+  },
+  "7:A:The Summit A / 1500M": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "1500m"
+  },
+  "7:A:The Summit A / 2000M": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "2000m"
+  },
+  "7:A:The Summit A / 2500M": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "2500m"
+  },
+  "7:A:The Summit A / 3000M": {
+    "sheet_chapter": "7a",
+    "sheet_cp": "3000m"
+  }
+}

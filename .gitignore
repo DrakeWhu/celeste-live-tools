@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual envs
+.venv/
+.venv_opencode/
+
+# Analytics data
+checkpoint-analytics/data/*
+!checkpoint-analytics/data/.keep
+!checkpoint-analytics/data/checkpoint_logs/
+checkpoint-analytics/data/checkpoint_logs/*.csv
+
+# Timer-generated logs
+celeste-magic-timer/timer_data/checkpoint_logs/*
+!celeste-magic-timer/timer_data/checkpoint_logs/.keep
+
+#PNGs
+
+checkpoint-analytics/*.png

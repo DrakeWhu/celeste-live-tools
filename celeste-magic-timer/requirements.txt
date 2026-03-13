@@ -1,0 +1,4 @@
+pycairo
+PyGObject
+pynput
+PySide6
