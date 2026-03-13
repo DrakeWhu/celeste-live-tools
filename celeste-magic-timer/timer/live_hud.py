@@ -104,19 +104,25 @@ class MetricCard(QFrame):
     def __init__(self, metric: LiveMetric):
         super().__init__()
         self.setObjectName("metricCard")
+        self.setFixedHeight(56)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 12, 14, 12)
-        layout.setSpacing(4)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(10)
 
         self._label = QLabel(metric.label.upper())
         self._label.setObjectName("metricLabel")
+        self._label.setFont(QFont("DejaVu Sans Condensed", 9, 700))
+        self._label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         self._value = QLabel(metric_text(metric))
         self._value.setObjectName("metricValue")
-        self._value.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self._value.setFont(QFont("JetBrains Mono", 16, 800))
+        self._value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self._value.setMinimumWidth(124)
 
         layout.addWidget(self._label)
+        layout.addStretch(1)
         layout.addWidget(self._value)
 
         self.update_metric(metric)
@@ -323,13 +329,21 @@ class SplitRowWidget(QFrame):
                 "color: %s; background: transparent; border: none; padding: 0px;" % SECONDARY_TEXT
             )
         else:
-            self._delta.setText(format_delta(row.delta_ms))
-            delta_text_color = "#0b0f14" if row.semantic in (HudSemantic.GOLD, HudSemantic.GOOD) else "#fff4f2"
-            self._delta.setStyleSheet(
-                "color: %s; background-color: %s; padding: 2px 10px; border-radius: 10px; "
-                "font-weight: 900; border: 1px solid %s;"
-                % (delta_text_color, _rgba(accent_color, 0.95), _rgba(accent_color, 0.55))
-            )
+            if row.delta_ms is None:
+                self._delta.setText("--")
+                self._delta.setStyleSheet(
+                    "color: %s; background-color: rgba(201, 215, 229, 0.06); padding: 2px 10px; "
+                    "border-radius: 10px; font-weight: 700; border: 1px solid rgba(201, 215, 229, 0.14);"
+                    % SECONDARY_TEXT
+                )
+            else:
+                self._delta.setText(format_delta(row.delta_ms))
+                delta_text_color = "#0b0f14" if row.semantic in (HudSemantic.GOLD, HudSemantic.GOOD) else "#fff4f2"
+                self._delta.setStyleSheet(
+                    "color: %s; background-color: %s; padding: 2px 10px; border-radius: 10px; "
+                    "font-weight: 900; border: 1px solid %s;"
+                    % (delta_text_color, _rgba(accent_color, 0.95), _rgba(accent_color, 0.55))
+                )
 
         self.update()
 
@@ -400,9 +414,9 @@ class LiveHudWindow(QMainWindow):
 
         metrics_panel = self._build_panel()
         metrics_layout = QGridLayout(metrics_panel)
-        metrics_layout.setContentsMargins(12, 12, 12, 12)
-        metrics_layout.setHorizontalSpacing(10)
-        metrics_layout.setVerticalSpacing(10)
+        metrics_layout.setContentsMargins(10, 10, 10, 10)
+        metrics_layout.setHorizontalSpacing(8)
+        metrics_layout.setVerticalSpacing(8)
 
         state = self._provider.snapshot()
         metrics = [state.predicted_final, state.best_possible, state.pb_pace, state.median_pace]
@@ -516,10 +530,20 @@ class LiveHudWindow(QMainWindow):
                 );
                 border-radius: 6px;
             }
-            #sectionLabel, #metricLabel {
+            #sectionLabel {
                 color: #93a1b0;
                 font-size: 11px;
                 font-weight: 600;
+            }
+            #metricLabel {
+                color: #93a1b0;
+                font-size: 10px;
+                font-weight: 700;
+            }
+            #metricCard {
+                background-color: rgba(12, 16, 22, 0.30);
+                border: 1px solid rgba(201, 215, 229, 0.10);
+                border-radius: 12px;
             }
             #currentSplitName {
                 color: #f5f1e8;
@@ -527,9 +551,9 @@ class LiveHudWindow(QMainWindow):
             }
             #metricValue {
                 color: #f5f1e8;
-                font-size: 18px;
+                font-size: 16px;
                 font-family: "JetBrains Mono", "DejaVu Sans Mono";
-                font-weight: 700;
+                font-weight: 800;
             }
             #splitName {
                 font-size: 15px;
