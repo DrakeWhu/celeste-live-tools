@@ -29,7 +29,7 @@ The tool is designed to behave similarly to LiveSplit while remaining simple and
 
 ## Screenshot
 
-
+![HUD example](livesplit_mio.png)
 
 Example HUD during a run:
 
